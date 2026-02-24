@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+**/__pycache__/
+**/*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Ortam
+backend/.env
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/.env
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Loglar
+*.log
