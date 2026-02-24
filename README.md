@@ -1,3 +1,7 @@
+<div align="right">
+  <a href="README.md"><strong>TR</strong></a> &nbsp;|&nbsp; <a href="README.en.md">EN</a>
+</div>
+
 # TechPrice
 
 Türk teknoloji satıcılarından bilgisayar parçası fiyatlarını çekip tek bir yerde karşılaştırmalı olarak gösteren bir web uygulaması. Şu an İtopya ve İnceHesap destekleniyor; Sinerji desteği üzerinde çalışılıyor.
