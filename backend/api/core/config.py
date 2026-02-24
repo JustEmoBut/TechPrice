@@ -15,12 +15,14 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
 
     # Scraper
+    scraper_headless: bool = True
     scraper_delay_min: float = 2.0
     scraper_delay_max: float = 5.0
     scraper_max_products_per_category: int = 200
     scraper_concurrency: int = 2
     scraper_max_retries: int = 3
     scraper_page_timeout: int = 30
+    scraper_cf_timeout: int = 30
 
     # Scheduler
     scheduler_enabled: bool = True

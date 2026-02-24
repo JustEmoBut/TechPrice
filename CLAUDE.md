@@ -19,6 +19,13 @@ Türk teknoloji sitelerinden (İtopya, İnceHesap, Sinerji) bilgisayar parçası
 - `ProactorEventLoop` Python 3.14'te default — `set_event_loop_policy()` çağırma
 - `asyncio.run()` Motor thread pool yüzünden asılır → `shutdown_default_executor(timeout=5)` gerekli (`scrape_cli.py`)
 
+**Scraper gotcha'lar:**
+- `SCRAPER_MAX_PRODUCTS_PER_CATEGORY=0` → sınırsız anlamına gelir (kod `float("inf")` kullanır); .env'de 0 bırakılabilir
+- `parse_price()` yalnızca virgül+nokta karışık formatlarda çalışır; salt noktalı `"18.599"` → `18.599` (YANLIŞ). Site'a özgü parser gerekebilir
+- CloudFlare: `_wait_for_cloudflare()` base_scraper'da mevcut — sayfa başlığı "Just a moment..." ise Camoufox geçene kadar bekler
+- Hata ayıklama için `.env`'e `SCRAPER_HEADLESS=false` ekle — tarayıcı görünür açılır
+- CF timeout: `SCRAPER_CF_TIMEOUT=60` (yavaş bağlantıda veya zor challenge'larda artır)
+
 ---
 
 ## Hızlı Başlangıç
@@ -46,7 +53,7 @@ backend/
 ├── scraper/base_scraper.py    # Abstract base, Camoufox, ProactorEventLoop dallanması
 ├── scraper/itopya_scraper.py      # ✅
 ├── scraper/incehesap_scraper.py   # ✅
-├── scraper/sinerji_scraper.py     # ❌ yazılmadı
+├── scraper/sinerji_scraper.py     # ✅
 ├── scraper/scraper_manager.py # Paralel koordinasyon + upsert
 ├── scraper/scheduler.py       # APScheduler haftalık
 ├── scraper/models.py          # ScrapedProduct, parse_price, normalize_name
@@ -99,6 +106,13 @@ Sayfalama: `?pg=N` | Kategoriler: `_k8` CPU, `_k9` MOBO, `_k11` GPU, `_k10` RAM,
 Sonraki sayfa: Nav son link (`.sr-only`="Next"), href `javascript:;` değilse
 Sayfalama: `/kategori-adi/sayfa-N/` (~60/sayfa) | Kategoriler: `/islemci-fiyatlari/`, `/ekran-karti-fiyatlari/`, `/anakart-fiyatlari/`, `/ram-fiyatlari/`, `/ssd-harddisk-fiyatlari/`, `/bilgisayar-kasasi-fiyatlari/`, `/power-supply-fiyatlari/`
 
+### Sinerji
+Ürün: `article` | İsim: `.title a` | URL: `article a` (göreli) | Resim: `article img[src]` (tam URL, lazy-load yok)
+Fiyat: `.price` → "18.599" (nokta=binlik ayracı → `_parse_sinerji_price()` kullan, `parse_price()` değil)
+Stok yok: `.alert` elementi varsa, fiyat da yok → atla | Sayfalama: `?px=N`
+Sonraki sayfa: `nav[aria-label="Page navigation"]` içinde `<a>Sonraki</a>` varsa devam (son sayfada `span.disabled`)
+Kategoriler: `/islemci-c-1` CPU, `/anakart-c-2009` MOBO, `/bellek-ram-c-2010` RAM, `/depolama-c-2146` SSD, `/ekran-karti-c-2023` GPU, `/bilgisayar-kasasi-c-2027` CASE, `/guc-kaynagi-c-2030` PSU
+
 ### Gotcha'lar
 - `page.close()` her zaman `finally` bloğunda çağır
 - Kategoriler arası `asyncio.sleep(3)` gerekli (Firefox subprocess)
@@ -132,7 +146,7 @@ python scrape_cli.py --cat GPU --cat CPU
 
 ## Kalan Görevler
 
-- [ ] Sinerji scraper (önce site analizi)
+- [x] Sinerji scraper
 - [ ] specs boş — detay sayfası scraping (opsiyonel)
 - [ ] Ürün eşleştirme (`normalized_name`) gerçek verilerle doğrulama
 - [ ] Fiyat geçmişi grafiği gerçek verilerle test

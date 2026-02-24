@@ -1,6 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from scraper.itopya_scraper import ItopyaScraper
 from scraper.incehesap_scraper import InceHesapScraper
+from scraper.sinerji_scraper import SinerjiScraper
 from scraper.models import ScrapedProduct
 from api.db.repositories import product_repo, price_repo
 from datetime import datetime, UTC
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 SCRAPER_MAP = {
     "itopya":    ItopyaScraper,
     "incehesap": InceHesapScraper,
-    # "sinerji": SinerjiScraper,  # sonradan eklenecek
+    "sinerji":   SinerjiScraper,
 }
 
 ALL_SITES = list(SCRAPER_MAP.keys())

@@ -4,13 +4,13 @@
 
 # TechPrice
 
-Türk teknoloji satıcılarından bilgisayar parçası fiyatlarını çekip tek bir yerde karşılaştırmalı olarak gösteren bir web uygulaması. Şu an İtopya ve İnceHesap destekleniyor; Sinerji desteği üzerinde çalışılıyor.
+Türk teknoloji satıcılarından bilgisayar parçası fiyatlarını çekip tek bir yerde karşılaştırmalı olarak gösteren bir web uygulaması. İtopya, İnceHesap ve Sinerji destekleniyor.
 
 ---
 
 ## Ne Yapıyor?
 
-Her hafta Pazar günü arka planda otomatik olarak İtopya ve İnceHesap'taki CPU, GPU, RAM, SSD, anakart, kasa ve güç kaynağı listelerini tarar. Toplanan veriler MongoDB'ye kaydedilir; her ürün için zaman içindeki fiyat değişimi takip edilir. Frontend'de ürünleri kategoriye, siteye göre filtreleyebilir, fiyat geçmişini grafik üzerinde görebilirsiniz.
+Her hafta Pazar günü arka planda otomatik olarak İtopya, İnceHesap ve Sinerji'deki CPU, GPU, RAM, SSD, anakart, kasa ve güç kaynağı listelerini tarar. Toplanan veriler MongoDB'ye kaydedilir; her ürün için zaman içindeki fiyat değişimi takip edilir. Frontend'de ürünleri kategoriye, siteye göre filtreleyebilir, fiyat geçmişini grafik üzerinde görebilirsiniz.
 
 Scraper tarafı Camoufox üzerine kurulu — normal Playwright ya da Selenium ile kolayca engellenebilen sitelerde daha sağlıklı çalışıyor.
 

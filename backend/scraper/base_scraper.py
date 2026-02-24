@@ -101,11 +101,13 @@ class BaseScraper(ABC):
         base_url = categories[category]
         all_products = []
         page_num = 1
-        max_products = settings.scraper_max_products_per_category
+        # 0 = sınırsız; float('inf') ile kıyaslamak Python'da geçerli
+        _limit = settings.scraper_max_products_per_category
+        max_products: int | float = _limit if _limit > 0 else float("inf")
 
         logger.info(f"{self.SITE_NAME}: {category} kategorisi scraping basliyor...")
 
-        async with AsyncCamoufox(headless=True, geoip=True) as browser:
+        async with AsyncCamoufox(headless=settings.scraper_headless, geoip=True) as browser:
             page = await browser.new_page()
             try:
                 while len(all_products) < max_products:
@@ -194,12 +196,37 @@ class BaseScraper(ABC):
                     timeout=settings.scraper_page_timeout * 1000,
                     wait_until="domcontentloaded"
                 )
+                await self._wait_for_cloudflare(page)
                 return True
             except Exception as e:
                 logger.warning(f"Gezinme hatası (deneme {attempt}/{max_attempts}): {e}")
                 if attempt < max_attempts:
                     await asyncio.sleep(2 ** attempt)
         return False
+
+    async def _wait_for_cloudflare(self, page: Page, timeout: int | None = None) -> None:
+        """
+        CloudFlare challenge sayfası tespit edilirse çözülmesini bekle.
+        CF challenge sayfasının başlığı 'Just a moment...' içerir.
+        Camoufox normalde CF'i otomatik geçer — sadece yeterli süre vermek gerekiyor.
+        """
+        cf_timeout = timeout if timeout is not None else settings.scraper_cf_timeout
+        try:
+            title = await page.title()
+            if "just a moment" not in title.lower():
+                return
+
+            logger.info(f"{self.SITE_NAME}: CloudFlare challenge tespit edildi, bekleniyor...")
+            # Başlık değişene kadar bekle: CF çözüldü = asıl sayfa yüklendi
+            await page.wait_for_function(
+                "() => !document.title.toLowerCase().includes('just a moment')",
+                timeout=cf_timeout * 1000,
+            )
+            # CF redirect sonrası sayfanın tam oturması için kısa ek bekleme
+            await asyncio.sleep(2)
+            logger.info(f"{self.SITE_NAME}: CloudFlare gecildi.")
+        except Exception as e:
+            logger.warning(f"{self.SITE_NAME}: CloudFlare bekleme suresi doldu veya hata: {e}")
 
     async def _retry(self, coro_fn, max_attempts: int = 3):
         for attempt in range(1, max_attempts + 1):

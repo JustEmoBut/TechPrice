@@ -4,13 +4,13 @@
 
 # TechPrice
 
-A web application that scrapes computer hardware prices from Turkish tech retailers and displays them in one place for easy comparison. Currently supports İtopya and İnceHesap; Sinerji support is in progress.
+A web application that scrapes computer hardware prices from Turkish tech retailers and displays them in one place for easy comparison. Supports İtopya, İnceHesap, and Sinerji.
 
 ---
 
 ## What It Does
 
-Every Sunday, the app automatically scrapes CPU, GPU, RAM, SSD, motherboard, case, and PSU listings from İtopya and İnceHesap in the background. The collected data is saved to MongoDB, and price changes are tracked over time for each product. On the frontend, you can filter products by category or retailer, and view price history as a chart.
+Every Sunday, the app automatically scrapes CPU, GPU, RAM, SSD, motherboard, case, and PSU listings from İtopya, İnceHesap, and Sinerji in the background. The collected data is saved to MongoDB, and price changes are tracked over time for each product. On the frontend, you can filter products by category or retailer, and view price history as a chart.
 
 The scraper is built on Camoufox — it handles sites that would easily block standard Playwright or Selenium sessions.
 
