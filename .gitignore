@@ -16,6 +16,7 @@ frontend/.env
 
 # Claude Code
 .claude/
+.playwright-mcp/
 
 # OS
 .DS_Store
