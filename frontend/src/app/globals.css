@@ -45,6 +45,8 @@
 }
 
 :root {
+  --font-inter: "Segoe UI", "Arial", sans-serif;
+  --font-jetbrains: "Consolas", "Courier New", monospace;
   --radius: 0.5rem;
   --background: #09090b;
   --foreground: #f4f4f5;

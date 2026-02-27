@@ -1,7 +1,7 @@
 # TechPriceRemake — CLAUDE.md
 
 ## Stack
-Python 3.14 + Camoufox → FastAPI (port 8300) → MongoDB Atlas → Next.js 15
+Python 3.14 + Camoufox → FastAPI (port 8300) → MongoDB Atlas → Next.js 16
 Türk teknoloji sitelerinden (İtopya, İnceHesap, Sinerji) bilgisayar parçası fiyatlarını scraping yapıp karşılaştırmalı gösteren fullstack uygulama.
 
 ---
@@ -62,7 +62,7 @@ backend/
 
 frontend/src/
 ├── app/                       # Next.js 15 App Router
-├── components/                # Navbar, ProductCard, ProductFilter, PriceHistoryChart
+├── components/                # Navbar, ProductCard, ProductFilter, PriceHistoryChart, MiniSparkline
 ├── hooks/                     # useProducts, usePriceHistory (TanStack Query v5)
 └── lib/api.ts                 # axios client
 ```
@@ -139,7 +139,10 @@ python scrape_cli.py --cat GPU --cat CPU
 - `useSearchParams()` Suspense ile sarılmalı (App Router build hatası)
 - `/api/categories` sadece ürünü olanları döndürür — `KNOWN_CATEGORIES` ile merge et
 - Native `<select>` koyu temada solid renk kullan, `bg-white/5` değil (Windows dropdown beyaz olur)
-- `npm audit fix --force` **ÇALIŞTIRMA** — ESLint downgrade eder. Açıklar için `package.json` overrides: `{ "ajv": "^8.18.0", "minimatch": "^10.2.1" }`
+- `npm audit fix --force` **ÇALIŞTIRMA** — ESLint downgrade eder. Açıklar için `package.json` overrides: `{ "minimatch": "^10.2.1" }` (`ajv` nested resolution ile çözülüyor, override'a gerek yok)
+- Fontlar: Google Fonts kaldırıldı; `globals.css`'te `--font-inter: "Segoe UI"`, `--font-jetbrains: "Consolas"` CSS vars ile tanımlı
+- `npm run build` — TypeScript hatası kontrolü için en hızlı yol (~30s)
+- MiniSparkline: aynı günde yapılan birden fazla scraping tek nokta sayılır; trend çizgisi için farklı günlerde en az 2 scraping gerekiyor
 - Tema: Minimal Dark — `#09090b` arka plan, `#3b82f6` mavi accent
 
 ---
@@ -149,4 +152,4 @@ python scrape_cli.py --cat GPU --cat CPU
 - [x] Sinerji scraper
 - [ ] specs boş — detay sayfası scraping (opsiyonel)
 - [ ] Ürün eşleştirme (`normalized_name`) gerçek verilerle doğrulama
-- [ ] Fiyat geçmişi grafiği gerçek verilerle test
+- [x] Fiyat geçmişi grafiği gerçek verilerle test (PriceHistoryChart + MiniSparkline çalışıyor)

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/types/product";
+import { MiniSparkline } from "@/components/charts/MiniSparkline";
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("tr-TR", {
@@ -67,6 +68,11 @@ export function ProductCard({ product }: Props) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Fiyat Trend Sparkline */}
+        <div className="px-4 pb-1">
+          <MiniSparkline productId={product.id} />
         </div>
 
         {/* En Ucuz footer */}
