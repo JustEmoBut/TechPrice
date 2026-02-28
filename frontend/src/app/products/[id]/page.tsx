@@ -107,7 +107,7 @@ export default function ProductDetailPage() {
                 const isCheapest = cheapestInStock?.site === sp.site;
                 return (
                   <div
-                    key={sp.site}
+                    key={sp.url}
                     className={`flex items-center px-4 py-3 gap-3 ${
                       isCheapest ? "border-l-2 border-l-[#3b82f6] bg-[#1e3a5f]/20" : ""
                     }`}

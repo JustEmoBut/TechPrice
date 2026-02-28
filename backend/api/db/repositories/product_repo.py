@@ -165,12 +165,26 @@ async def upsert_product(db: AsyncIOMotorDatabase, product_data: dict) -> tuple[
     # Mevcut ürüne yeni site eklendi → min_price'ı güncel veriden yeniden hesapla.
     updated = await db.products.find_one({"normalized_name": normalized_name})
     site_prices = updated.get("site_prices", [])
-    stocked = [sp for sp in site_prices if sp.get("in_stock", True)]
+
+    # Aynı siteden birden fazla entry olabilir (concurrent push race condition).
+    # Son gelen kazanır → dedup.
+    seen: dict = {}
+    for sp in site_prices:
+        seen[sp["site"]] = sp
+    deduped = list(seen.values())
+
+    stocked = [sp for sp in deduped if sp.get("in_stock", True)]
+    update_fields: dict = {}
+    if len(deduped) < len(site_prices):
+        update_fields["site_prices"] = deduped
     if stocked:
         min_entry = min(stocked, key=lambda x: x["price"])
+        update_fields["min_price"] = min_entry["price"]
+        update_fields["min_price_site"] = min_entry["site"]
+    if update_fields:
         await db.products.update_one(
             {"_id": updated["_id"]},
-            {"$set": {"min_price": min_entry["price"], "min_price_site": min_entry["site"]}},
+            {"$set": update_fields},
         )
     return str(updated["_id"]), False
 

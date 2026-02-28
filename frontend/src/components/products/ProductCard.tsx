@@ -51,7 +51,7 @@ export function ProductCard({ product }: Props) {
           {/* Site fiyatlari */}
           <div className="space-y-1.5 mt-auto">
             {allPrices.map((sp) => (
-              <div key={sp.site} className="flex items-center justify-between">
+              <div key={sp.url} className="flex items-center justify-between">
                 <span className="text-xs text-[#71717a] flex items-center gap-1.5">
                   <span className={sp.in_stock ? "dot-green" : "dot-red"} />
                   {sp.site_display_name}

@@ -22,6 +22,7 @@ Türk teknoloji sitelerinden (İtopya, İnceHesap, Sinerji) bilgisayar parçası
 **Scraper gotcha'lar:**
 - `SCRAPER_MAX_PRODUCTS_PER_CATEGORY=0` → sınırsız anlamına gelir (kod `float("inf")` kullanır); .env'de 0 bırakılabilir
 - `parse_price()` yalnızca virgül+nokta karışık formatlarda çalışır; salt noktalı `"18.599"` → `18.599` (YANLIŞ). Site'a özgü parser gerekebilir
+- `normalize_name()` site-spesifik gürültüyü siler: Türkçe kategori ekleri (Islemci, Ekran Karti…), GeForce/Radeon/Core, BOX/OEM/Tray/MPK, AM4/AM5/LGA\d+, GHz, \d+C/\d+T, \d+nm, Cekirdek, Onbellek. GB/TB/MHz/CL korunur (SKU kritik).
 - CloudFlare: `_wait_for_cloudflare()` base_scraper'da mevcut — sayfa başlığı "Just a moment..." ise Camoufox geçene kadar bekler
 - Hata ayıklama için `.env`'e `SCRAPER_HEADLESS=false` ekle — tarayıcı görünür açılır
 - CF timeout: `SCRAPER_CF_TIMEOUT=60` (yavaş bağlantıda veya zor challenge'larda artır)
@@ -90,6 +91,7 @@ Scraping sadece scheduler (her Pazar 12:00) veya CLI ile tetiklenir.
 ## MongoDB Şeması
 
 - **products:** `normalized_name` (unique index) — ürün eşleştirme; `site_prices[]` embed; `min_price`, `min_price_site`
+- `site_prices` her site için tek entry içermeli (unique by site). `upsert_product` Durum 2 path'inde concurrent push race condition'a karşı dedup yapılıyor.
 - **price_history:** `product_id + site + scraped_at` bileşik index; `price_change`, `price_change_pct`
 
 ---
@@ -151,5 +153,5 @@ python scrape_cli.py --cat GPU --cat CPU
 
 - [x] Sinerji scraper
 - [ ] specs boş — detay sayfası scraping (opsiyonel)
-- [ ] Ürün eşleştirme (`normalized_name`) gerçek verilerle doğrulama
+- [x] Ürün eşleştirme (`normalized_name`) — noise pattern'lar eklendi, gerçek verilerle doğrulandı
 - [x] Fiyat geçmişi grafiği gerçek verilerle test (PriceHistoryChart + MiniSparkline çalışıyor)
