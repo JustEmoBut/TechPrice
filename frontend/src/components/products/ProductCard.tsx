@@ -1,7 +1,12 @@
-import Link from "next/link";
 import Image from "next/image";
-import type { Product } from "@/types/product";
+import Link from "next/link";
+import { ArrowUpRight, Clock3 } from "lucide-react";
 import { MiniSparkline } from "@/components/charts/MiniSparkline";
+import type { Product } from "@/types/product";
+
+interface Props {
+  product: Product;
+}
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("tr-TR", {
@@ -11,82 +16,96 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-interface Props {
-  product: Product;
+function formatUpdatedDate(input: string | null) {
+  if (!input) return "Bilinmiyor";
+  return new Date(input).toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "short",
+  });
 }
 
 export function ProductCard({ product }: Props) {
-  const allPrices = product.site_prices;
+  const sortedSitePrices = [...product.site_prices].sort((a, b) => a.price - b.price);
 
   return (
-    <Link href={`/products/${product.id}`}>
-      <div className="bg-[#111113] border border-[#27272a] rounded-lg h-full flex flex-col cursor-pointer transition-colors duration-150 hover:bg-[#18181b] hover:border-[#3f3f46]">
-        {/* Resim */}
-        {product.image_url && (
-          <div className="relative h-44 w-full overflow-hidden rounded-t-lg bg-[#0f0f11]">
+    <Link
+      href={`/products/${product.id}`}
+      className="group animate-card-reveal block h-full"
+      aria-label={`${product.name} detayına git`}
+    >
+      <article className="editorial-card relative flex h-full flex-col overflow-hidden rounded-2xl transition-all duration-500 hover:-translate-y-1 hover:border-signal/60 hover:shadow-[0_35px_55px_-36px_rgba(245,245,245,0.35)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_45%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+        <div className="relative h-44 overflow-hidden border-b border-edge/70 bg-surface-2/60">
+          {product.image_url ? (
             <Image
               src={product.image_url}
               alt={product.name}
               fill
-              className="object-contain p-4"
               unoptimized
+              className="object-contain p-5 transition-transform duration-500 group-hover:scale-[1.05]"
             />
-          </div>
-        )}
-
-        {/* Icerik */}
-        <div className="p-4 flex-1 flex flex-col">
-          {/* Kategori badge */}
-          <span className="inline-block self-start px-2 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase text-[#93c5fd] bg-[#1e3a5f] mb-2">
-            {product.category}
-          </span>
-
-          {product.brand && (
-            <p className="text-[11px] text-[#52525b] mb-1">{product.brand}</p>
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-ink-muted">Görsel yok</div>
           )}
-          <h3 className="font-medium text-sm leading-snug line-clamp-2 mb-3 text-[#e4e4e7]">
-            {product.name}
-          </h3>
+        </div>
 
-          {/* Site fiyatlari */}
-          <div className="space-y-1.5 mt-auto">
-            {allPrices.map((sp) => (
-              <div key={sp.url} className="flex items-center justify-between">
-                <span className="text-xs text-[#71717a] flex items-center gap-1.5">
-                  <span className={sp.in_stock ? "dot-green" : "dot-red"} />
-                  {sp.site_display_name}
-                </span>
-                <span
-                  className={
-                    sp.in_stock
-                      ? "font-mono text-sm font-semibold text-[#f4f4f5]"
-                      : "font-mono text-xs text-[#52525b] line-through"
-                  }
+        <div className="relative flex flex-1 flex-col p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <span className="rounded-full border border-signal/50 bg-signal-soft/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-signal">
+              {product.category}
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] text-ink-muted">
+              <Clock3 size={12} />
+              {formatUpdatedDate(product.updated_at)}
+            </span>
+          </div>
+
+          {product.brand ? <p className="text-xs text-ink-muted">{product.brand}</p> : null}
+          <h3 className="mt-1 line-clamp-2 text-base font-semibold leading-tight text-ink">{product.name}</h3>
+
+          <div className="mt-4 space-y-2">
+            {sortedSitePrices.slice(0, 3).map((sitePrice, index) => {
+              const inStockClass = sitePrice.in_stock ? "text-ink" : "text-ink-muted line-through";
+              const indicatorClass = sitePrice.in_stock ? "dot-green" : "dot-red";
+
+              return (
+                <div
+                  key={`${sitePrice.site}-${sitePrice.url}`}
+                  className={`flex items-center justify-between rounded-lg border px-2.5 py-2 text-xs ${
+                    index === 0 ? "border-signal/50 bg-signal-soft/40" : "border-edge/60 bg-surface-1/55"
+                  }`}
                 >
-                  {formatPrice(sp.price)}
-                </span>
-              </div>
-            ))}
+                  <span className="flex items-center gap-2 text-ink-soft">
+                    <span className={indicatorClass} />
+                    {sitePrice.site_display_name}
+                  </span>
+                  <span className={`font-mono text-[13px] font-semibold ${inStockClass}`}>
+                    {formatPrice(sitePrice.price)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between border-t border-edge/65 pt-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-ink-muted">En Düşük</p>
+              <p className="font-mono text-sm font-semibold text-signal">
+                {product.min_price ? formatPrice(product.min_price) : "-"}
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-signal transition-transform duration-300 group-hover:translate-x-1">
+              Detay
+              <ArrowUpRight size={13} />
+            </span>
           </div>
         </div>
 
-        {/* Fiyat Trend Sparkline */}
-        <div className="px-4 pb-1">
+        <div className="px-4 pb-3">
           <MiniSparkline productId={product.id} />
         </div>
-
-        {/* En Ucuz footer */}
-        {product.min_price && (
-          <div className="px-4 pb-4">
-            <div className="rounded-md border border-[#1d4ed8]/30 bg-[#1e3a5f]/40 px-3 py-2 flex items-center justify-between">
-              <span className="text-xs text-[#60a5fa]">En dusuk</span>
-              <span className="font-mono font-bold text-sm text-[#93c5fd]">
-                {formatPrice(product.min_price)}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
+      </article>
     </Link>
   );
 }

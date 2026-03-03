@@ -1,39 +1,68 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Search, Sparkles } from "lucide-react";
 
 export function Navbar() {
-  const [search, setSearch] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      router.push(`/?q=${encodeURIComponent(search.trim())}`);
+  const initialQuery = searchParams.get("q") ?? "";
+  const [search, setSearch] = useState(initialQuery);
+
+  useEffect(() => {
+    setSearch(initialQuery);
+  }, [initialQuery]);
+
+  const subtitle = useMemo(() => {
+    if (pathname?.startsWith("/products/")) return "Derin ürün analizi";
+    return "Canlı fiyat radarı";
+  }, [pathname]);
+
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const term = search.trim();
+    if (term.length < 2) {
+      router.push("/");
+      return;
     }
+    router.push(`/?q=${encodeURIComponent(term)}`);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#09090b]/95 backdrop-blur-sm border-b border-[#27272a]">
-      <div className="container mx-auto flex h-14 items-center gap-6 px-4">
-        {/* Logo */}
-        <Link href="/" className="font-bold text-sm tracking-widest shrink-0">
-          <span className="text-[#f4f4f5]">TECH</span>
-          <span className="text-[#3b82f6]">PRICE</span>
-        </Link>
+    <header className="sticky top-0 z-50 border-b border-edge/60 bg-surface-0/85 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 py-4 md:px-8 md:py-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="group inline-flex items-center gap-3">
+              <span className="rounded-xl border border-signal/40 bg-signal-soft/70 p-2 text-signal transition-transform duration-300 group-hover:scale-105 glow-ring">
+                <Sparkles size={16} />
+              </span>
+              <div>
+                <p className="font-display text-xs uppercase tracking-[0.3em] text-ink-soft">
+                  TechPrice
+                </p>
+                <p className="text-xs text-ink-muted">{subtitle}</p>
+              </div>
+            </Link>
+          </div>
 
-        {/* Arama */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-sm">
-          <input
-            type="search"
-            placeholder="Urun, marka ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-md bg-[#18181b] border border-[#27272a] px-3 py-1.5 text-sm text-[#f4f4f5] placeholder:text-[#52525b] focus:outline-none focus:border-[#3b82f6]/60 focus:ring-1 focus:ring-[#3b82f6]/30 transition-colors"
-          />
-        </form>
+          <form onSubmit={handleSearch} className="w-full md:max-w-md">
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" size={16} />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Ürün veya marka ara..."
+                className="h-11 w-full rounded-xl border border-edge/80 bg-surface-1/75 pl-10 pr-4 text-sm text-ink placeholder:text-ink-muted/70 transition-all duration-300 focus:border-signal/80 focus:outline-none focus:ring-2 focus:ring-signal/30"
+              />
+            </label>
+          </form>
+        </div>
       </div>
     </header>
   );
