@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, Sparkles } from "lucide-react";
 
@@ -11,11 +11,6 @@ export function Navbar() {
   const searchParams = useSearchParams();
 
   const initialQuery = searchParams.get("q") ?? "";
-  const [search, setSearch] = useState(initialQuery);
-
-  useEffect(() => {
-    setSearch(initialQuery);
-  }, [initialQuery]);
 
   const subtitle = useMemo(() => {
     if (pathname?.startsWith("/products/")) return "Derin ürün analizi";
@@ -24,7 +19,8 @@ export function Navbar() {
 
   const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const term = search.trim();
+    const formData = new FormData(event.currentTarget);
+    const term = String(formData.get("q") ?? "").trim();
     if (term.length < 2) {
       router.push("/");
       return;
@@ -54,9 +50,10 @@ export function Navbar() {
             <label className="relative block">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" size={16} />
               <input
+                key={initialQuery}
+                name="q"
                 type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                defaultValue={initialQuery}
                 placeholder="Ürün veya marka ara..."
                 className="h-11 w-full rounded-xl border border-edge/80 bg-surface-1/75 pl-10 pr-4 text-sm text-ink placeholder:text-ink-muted/70 transition-all duration-300 focus:border-signal/80 focus:outline-none focus:ring-2 focus:ring-signal/30"
               />
