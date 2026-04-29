@@ -3,61 +3,59 @@
 import Link from "next/link";
 import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Radar, Sparkle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Gauge, RotateCcw, ScanSearch } from "lucide-react";
 import { HeroStats } from "@/components/home/HeroStats";
 import { PriceDropHighlights } from "@/components/home/PriceDropHighlights";
 import { ProductCard } from "@/components/products/ProductCard";
+import { ProductComparePanel } from "@/components/products/ProductComparePanel";
 import { ProductFilter } from "@/components/products/ProductFilter";
 import { useProducts, useSearchProducts } from "@/hooks/useProducts";
+import type { Product } from "@/types/product";
 
 type StockFilter = "all" | "in_stock" | "out_stock";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  GPU: "GPU Segmenti",
-  CPU: "CPU Segmenti",
-  RAM: "RAM Segmenti",
-  SSD: "SSD Segmenti",
-  MOBO: "Anakart Segmenti",
-  PSU: "Güç Segmenti",
-  CASE: "Kasa Segmenti",
+  GPU: "Ekran Kartı",
+  CPU: "İşlemci",
+  RAM: "Bellek",
+  SSD: "Depolama",
+  MOBO: "Anakart",
+  PSU: "Güç Kaynağı",
+  CASE: "Kasa",
 };
+
+function parsePrice(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const category = searchParams.get("category") ?? "";
+  const queryTerm = searchParams.get("q") ?? "";
+  const isSearch = queryTerm.length >= 2;
+
   const [sort, setSort] = useState("updated");
   const [page, setPage] = useState(1);
   const [brand, setBrand] = useState("");
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [comparedProducts, setComparedProducts] = useState<Product[]>([]);
 
-  const queryTerm = searchParams.get("q") ?? "";
-  const isSearch = queryTerm.length >= 2;
-
-  const minPrice = useMemo(() => {
-    const value = minPriceInput.trim();
-    if (!value) return undefined;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
-  }, [minPriceInput]);
-
-  const maxPrice = useMemo(() => {
-    const value = maxPriceInput.trim();
-    if (!value) return undefined;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
-  }, [maxPriceInput]);
-
+  const minPrice = useMemo(() => parsePrice(minPriceInput), [minPriceInput]);
+  const maxPrice = useMemo(() => parsePrice(maxPriceInput), [maxPriceInput]);
   const inStock = stockFilter === "all" ? undefined : stockFilter === "in_stock";
 
   const productsQuery = useProducts({
     category: category || undefined,
     sort,
     page,
-    per_page: 21,
+    per_page: 24,
     brand: brand.trim() || undefined,
     min_price: minPrice,
     max_price: maxPrice,
@@ -68,15 +66,8 @@ function HomeContent() {
 
   const isLoading = isSearch ? searchQuery.isLoading : productsQuery.isLoading;
   const isError = isSearch ? searchQuery.isError : productsQuery.isError;
-
-  const items = isSearch
-    ? (searchQuery.data?.items ?? [])
-    : (productsQuery.data?.items ?? []);
-
-  const total = isSearch
-    ? (searchQuery.data?.total ?? 0)
-    : (productsQuery.data?.total ?? 0);
-
+  const items = isSearch ? (searchQuery.data?.items ?? []) : (productsQuery.data?.items ?? []);
+  const total = isSearch ? (searchQuery.data?.total ?? 0) : (productsQuery.data?.total ?? 0);
   const pages = isSearch ? 1 : (productsQuery.data?.pages ?? 1);
 
   const categoryLabel = useMemo(() => {
@@ -84,25 +75,59 @@ function HomeContent() {
     return CATEGORY_LABELS[category.toUpperCase()] ?? category.toUpperCase();
   }, [category]);
 
+  const visibleMin = items.reduce<number | null>((lowest, product) => {
+    if (!product.min_price) return lowest;
+    return lowest === null ? product.min_price : Math.min(lowest, product.min_price);
+  }, null);
+
+  const toggleCompare = (product: Product) => {
+    setComparedProducts((currentProducts) => {
+      if (currentProducts.some((currentProduct) => currentProduct.id === product.id)) {
+        return currentProducts.filter((currentProduct) => currentProduct.id !== product.id);
+      }
+
+      if (currentProducts.length >= 4) return currentProducts;
+      return [...currentProducts, product];
+    });
+  };
+
   return (
-    <div className="space-y-6 md:space-y-8">
-      <section className="glass-panel animate-rise rounded-3xl p-6 md:p-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-6 md:space-y-7">
+      <section className="glass-panel scanline animate-rise overflow-hidden rounded-2xl p-5 md:p-7">
+        <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <p className="font-display text-xs uppercase tracking-[0.32em] text-ink-muted">Editoryal Fiyat Takibi</p>
-            <h1 className="mt-3 max-w-3xl font-display text-3xl font-semibold leading-tight text-ink md:text-5xl">
-              {isSearch ? `"${queryTerm}" için canlı fiyat haritası` : "Türkiye donanım pazarını tek ekranda oku"}
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-edge/80 bg-surface-1/70 px-3 py-1 text-xs uppercase tracking-[0.22em] text-ink-muted">
+              <ScanSearch size={14} />
+              Canlı donanım pazarı
+            </div>
+            <h1 className="max-w-4xl font-display text-4xl font-semibold leading-[1.04] text-ink md:text-6xl">
+              {isSearch ? `"${queryTerm}" için fiyat sinyalleri` : "Parça fiyatlarını komuta panelinden yönet"}
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-ink-soft md:text-base">
-              Kategoriye göre filtrele, mağazalar arası makası gör ve detay sayfasında fiyat geçmişini incele.
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-ink-soft md:text-base">
+              Segment seç, stok durumunu ayıkla, mağaza makasını gör ve fiyat geçmişine tek hamlede in.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-ink-muted">
-            <span className="rounded-full border border-signal/40 bg-signal-soft/60 p-2 text-signal">
-              <Radar size={14} />
-            </span>
-            Haftalık tarama aktif
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="control-surface rounded-xl p-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-ink-muted">Ekrandaki en düşük fiyat</p>
+              <p className="mt-3 font-mono text-2xl font-semibold text-ink">
+                {visibleMin
+                  ? new Intl.NumberFormat("tr-TR", {
+                      style: "currency",
+                      currency: "TRY",
+                      maximumFractionDigits: 0,
+                    }).format(visibleMin)
+                  : "-"}
+              </p>
+            </div>
+            <div className="control-surface rounded-xl p-4">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-ink-muted">Görünüm</p>
+              <p className="mt-3 inline-flex items-center gap-2 text-sm text-ink-soft">
+                <Gauge size={16} />
+                {isSearch ? "Arama sonuçları" : categoryLabel}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -112,16 +137,16 @@ function HomeContent() {
       </section>
 
       {isSearch ? (
-        <section className="animate-rise rounded-2xl border border-edge/70 bg-surface-1/65 p-4 md:p-5">
+        <section className="control-surface animate-rise rounded-xl p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-ink-soft">
-              <span className="font-mono text-signal">{total}</span> sonuç bulundu
+              <span className="font-mono text-ink">{total}</span> sonuç listelendi.
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 rounded-lg border border-edge/80 bg-surface-2/60 px-3 py-2 text-xs text-ink-soft hover:border-signal/50"
+              className="inline-flex items-center gap-2 rounded-lg border border-edge/80 bg-surface-2/65 px-3 py-2 text-xs text-ink-soft hover:border-signal/55"
             >
-              <Sparkle size={13} />
+              <RotateCcw size={14} />
               Aramayı temizle
             </Link>
           </div>
@@ -173,40 +198,61 @@ function HomeContent() {
         <PriceDropHighlights products={items} />
       ) : null}
 
+      <ProductComparePanel
+        products={comparedProducts}
+        onRemove={(productId) =>
+          setComparedProducts((currentProducts) =>
+            currentProducts.filter((currentProduct) => currentProduct.id !== productId)
+          )
+        }
+        onClear={() => setComparedProducts([])}
+      />
+
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 9 }).map((_, index) => (
-            <div key={index} className="animate-shimmer h-[350px] rounded-2xl" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="animate-shimmer h-[390px] rounded-xl" />
           ))}
         </div>
       ) : null}
 
       {isError ? (
-        <section className="rounded-2xl border border-danger/50 bg-danger/10 p-8 text-center">
-          <p className="text-sm font-medium text-danger">API bağlantısı kurulamadığı için veriler yüklenemedi.</p>
+        <section className="rounded-xl border border-danger/50 bg-danger/10 p-8 text-center">
+          <p className="text-sm font-medium text-danger">API bağlantısı kurulamadı, veriler yüklenemedi.</p>
           <p className="mt-2 text-xs text-ink-muted">Backend kontrol: http://localhost:8300/api/health</p>
         </section>
       ) : null}
 
       {!isLoading && !isError && items.length === 0 ? (
-        <section className="rounded-2xl border border-edge/70 bg-surface-1/55 p-10 text-center">
+        <section className="control-surface rounded-xl p-10 text-center">
           <p className="font-display text-2xl text-ink">Sonuç bulunamadı</p>
           <p className="mt-2 text-sm text-ink-muted">
-            {isSearch ? "Farklı bir marka veya model dene." : "Seçilen filtrelere uygun ürün yok."}
+            {isSearch ? "Farklı bir marka, model veya ürün kodu dene." : "Seçili filtrelere uygun ürün yok."}
           </p>
         </section>
       ) : null}
 
       {!isLoading && !isError && items.length > 0 ? (
         <section className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold text-ink md:text-2xl">Ürün Listesi</h2>
-            <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">{total.toLocaleString("tr-TR")} kayıt</p>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.26em] text-ink-muted">Ürün Matrisi</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold text-ink">{categoryLabel}</h2>
+            </div>
+            <p className="rounded-full border border-edge/80 bg-surface-1/70 px-3 py-1 text-xs uppercase tracking-[0.18em] text-ink-muted">
+              {total.toLocaleString("tr-TR")} kayıt
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {items.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                isCompared={comparedProducts.some((currentProduct) => currentProduct.id === product.id)}
+                compareDisabled={comparedProducts.length >= 4}
+                onToggleCompare={toggleCompare}
+              />
             ))}
           </div>
 
@@ -215,7 +261,7 @@ function HomeContent() {
               <button
                 onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
                 disabled={page <= 1}
-                className="inline-flex items-center gap-2 rounded-xl border border-edge/80 bg-surface-1 px-4 py-2 text-sm text-ink-soft transition-colors hover:border-signal/60 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg border border-edge/80 bg-surface-1 px-4 py-2 text-sm text-ink-soft hover:border-signal/60 disabled:opacity-40"
               >
                 <ArrowLeft size={15} />
                 Önceki
@@ -226,7 +272,7 @@ function HomeContent() {
               <button
                 onClick={() => setPage((currentPage) => Math.min(pages, currentPage + 1))}
                 disabled={page >= pages}
-                className="inline-flex items-center gap-2 rounded-xl border border-edge/80 bg-surface-1 px-4 py-2 text-sm text-ink-soft transition-colors hover:border-signal/60 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg border border-edge/80 bg-surface-1 px-4 py-2 text-sm text-ink-soft hover:border-signal/60 disabled:opacity-40"
               >
                 Sonraki
                 <ArrowRight size={15} />

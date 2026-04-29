@@ -1,3 +1,3 @@
 @echo off
 cd /d "%~dp0"
-uvicorn api.main:app --reload --port 8300
+python -m uvicorn api.main:app --reload --port 8300

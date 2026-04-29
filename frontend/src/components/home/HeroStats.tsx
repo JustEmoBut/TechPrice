@@ -8,31 +8,31 @@ interface Props {
 export function HeroStats({ total, categoryLabel, isSearch, query }: Props) {
   const cards = [
     {
-      label: isSearch ? "Arama Sonucu" : "Gösterilen Ürün",
+      label: isSearch ? "Bulunan Kayıt" : "Aktif Kayıt",
       value: total.toLocaleString("tr-TR"),
-      hint: isSearch ? `Sorgu: \"${query}\"` : categoryLabel,
+      hint: isSearch ? `"${query}" sorgusu` : categoryLabel,
     },
     {
-      label: "Kaynak Mağaza",
+      label: "Kaynak",
       value: "3",
-      hint: "İtopya / İnceHesap / Sinerji",
+      hint: "İtopya, İnceHesap, Sinerji",
     },
     {
-      label: "Tarama Modeli",
+      label: "Tarama",
       value: "Haftalık",
-      hint: "APScheduler + manuel tetikleme",
+      hint: "Manuel tetikleme destekli",
     },
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-3 md:grid-cols-3">
       {cards.map((card, index) => (
         <article
           key={card.label}
-          className="glass-panel animate-rise rounded-xl p-4"
-          style={{ animationDelay: `${index * 90}ms` }}
+          className="control-surface animate-rise rounded-xl p-4"
+          style={{ animationDelay: `${index * 80}ms` }}
         >
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">{card.label}</p>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-ink-muted">{card.label}</p>
           <p className="mt-3 font-display text-2xl font-semibold text-ink">{card.value}</p>
           <p className="mt-1 text-xs text-ink-muted">{card.hint}</p>
         </article>

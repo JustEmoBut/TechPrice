@@ -37,6 +37,19 @@ function formatLabel(date: string) {
   });
 }
 
+function buildPriceDomain(values: number[]): [number, number] {
+  if (values.length === 0) return [0, 1];
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min;
+  const midpoint = (min + max) / 2;
+  const minimumContext = Math.max(midpoint * 0.08, 1000);
+  const padding = Math.max(range * 0.18, minimumContext);
+
+  return [Math.max(0, min - padding), max + padding];
+}
+
 export function PriceHistoryChart({ productId, days = 30 }: Props) {
   const { data, isLoading } = usePriceHistory(productId, undefined, days);
 
@@ -67,6 +80,7 @@ export function PriceHistoryChart({ productId, days = 30 }: Props) {
   }
 
   const sites = Array.from(new Set(data?.history.map((point) => point.site)));
+  const priceDomain = buildPriceDomain((data?.history ?? []).map((point) => point.price));
 
   return (
     <ResponsiveContainer width="100%" height={320}>
@@ -79,6 +93,7 @@ export function PriceHistoryChart({ productId, days = 30 }: Props) {
           tickLine={false}
         />
         <YAxis
+          domain={priceDomain}
           tick={{ fontSize: 11, fill: "#a6a6a6" }}
           tickFormatter={(value) => `${Math.round(Number(value) / 1000)}K`}
           axisLine={{ stroke: "rgba(170, 170, 170, 0.4)" }}

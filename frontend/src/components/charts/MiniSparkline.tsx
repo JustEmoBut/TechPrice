@@ -33,7 +33,9 @@ export function MiniSparkline({ productId }: Props) {
   const last = prices[prices.length - 1];
   const min = Math.min(...prices);
   const max = Math.max(...prices);
-  const padding = (max - min) * 0.12 || 1;
+  const range = max - min;
+  const midpoint = (min + max) / 2;
+  const padding = Math.max(range * 0.18, midpoint * 0.08, 1000);
 
   let stroke = "#a6a6a6";
   if (last < first) stroke = "#f2f2f2";
